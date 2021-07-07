@@ -1,0 +1,7 @@
+{
+  "name": "monokee-mfa-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}

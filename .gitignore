@@ -3,7 +3,14 @@
 
 # Enable specific dotfiles
 !.gitignore
+!.eslintrc.js
+!.browserslistrc
 
+npm-debug.log*
 
-node_modules
-coverage
+/node_modules
+/coverage
+/dist
+/platforms
+/plugins
+/www
