@@ -1,0 +1,9 @@
+# Ignore all dotfiles
+.*
+
+# Enable specific dotfiles
+!.gitignore
+
+
+node_modules
+coverage
