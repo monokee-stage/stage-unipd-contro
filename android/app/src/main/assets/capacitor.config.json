@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "monokee-mfa-app",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}
