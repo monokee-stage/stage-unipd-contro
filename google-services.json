@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "993481049055",
+    "project_id": "monokee-mfa-app",
+    "storage_bucket": "monokee-mfa-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:993481049055:android:5edde52129de7b36d97a6a",
+        "android_client_info": {
+          "package_name": "it.athesys.mfa_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "993481049055-uis9rm0nos6doivu2tlvaj7hd66d55to.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfvr_pIMnUHYj-a7Zg0HXGEqPbfPt5TQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "993481049055-uis9rm0nos6doivu2tlvaj7hd66d55to.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

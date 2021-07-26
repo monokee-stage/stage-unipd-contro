@@ -1,5 +1,5 @@
-import { AccountsState } from "@/modules/authentication/store/accounts/state";
-import { Account } from "@/modules/authentication/models/Account";
+import { AccountsState } from "@/store/accounts/state";
+import { Account } from "@/store/models/Account";
 
 export default {
   getAccountFromAccountId: (state: AccountsState) => (accountId: string): Account | undefined => {

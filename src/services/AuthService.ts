@@ -5,39 +5,33 @@ import {
   AuthorizationServiceConfiguration,
   BaseTokenRequestHandler,
   RedirectRequestHandler,
-  TokenRequest,
   TokenResponse
 } from "@openid/appauth";
 import axios from "axios";
 import { NodeBasedHandler, NodeRequestor } from "@openid/appauth/built/node_support";
+import { TokenRequest } from "@/store/models/AuthProvider";
 
 export default class AuthService {
 
-  static getAuthProviderConfigurationURL(domain_id: string): string {
-    let configurationUrl = '';
-    axios.get('/provider/' + domain_id + '/metadata')
+  static getAuthProviderConfigurationURL(domain_id: string): Promise<string> {
+    return axios.get('/mfa/provider/' + domain_id + '/metadata', {
+      params: {
+        domain_id: domain_id
+      }})
       .then((response) => {
-        configurationUrl = response.data;
+        return response.data.toString();
       })
       .catch((error) => { throw error; })
-    return configurationUrl;
   }
 
   static getAuthProviderConfiguration(openIdConnectURL: string): Promise<AuthorizationServiceConfiguration> {
-    return AuthorizationServiceConfiguration.fetchFromIssuer(openIdConnectURL, new NodeRequestor());
+    // return AuthorizationServiceConfiguration.fetchFromIssuer(openIdConnectURL, new NodeRequestor());
+    return axios.get(openIdConnectURL).then(
+      response => {
+        return new AuthorizationServiceConfiguration(response.data);
+      }
+    )
   }
-
-  // static requestAuthorizationCode() {
-  //   return oauth.client(axios.create(), {
-  //     url: 'https://new.monokee.com/oauth2/4220b7a2-ddae-4ce8-8a60-95302fcba6e8/authorize',
-  //     domain_id: '8214e0ab-5f42-410a-b393-8966a1066d06',
-  //     grant_type: 'authorization_code',
-  //     client_id: 'R^zd$vZ8KRf5MDbR',
-  //     redirect_uri: 'http://localhost/redirect',
-  //     code: '',
-  //     scope: 'admin',
-  //   })
-  // }
 
   static requestAuthorization(authProviderConfiguration: AuthorizationServiceConfiguration, authRequest: AuthorizationRequest): AuthorizationResponse {
     let authorizationResponse!: AuthorizationResponse;
@@ -57,11 +51,23 @@ export default class AuthService {
     return authorizationResponse;
   }
 
-  static requestToken(authProviderConfiguration: AuthorizationServiceConfiguration, tokenRequest: TokenRequest): Promise<TokenResponse> {
-    const tokenHandler = new BaseTokenRequestHandler();
-    return tokenHandler.performTokenRequest(authProviderConfiguration, tokenRequest)
-      .then((response) => response)
-      .catch((error) => { throw error; });
+  static requestToken(authProviderConfiguration: AuthorizationServiceConfiguration, data: TokenRequest/*tokenRequest: TokenRequest*/): Promise<any> {
+    // const tokenHandler = new BaseTokenRequestHandler(new NodeRequestor());
+    return axios.post(authProviderConfiguration.tokenEndpoint, data,
+      {
+        headers: {
+          // 'Authorization': 'Basic',
+          'Content-type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        }
+      }).then(response => {
+        // console.log(response)
+      console.log(response.toString())
+    })
+      .catch(error=> console.log(error));
+    // return tokenHandler.performTokenRequest(authProviderConfiguration, tokenRequest)
+    //   .then((response) => response)
+    //   .catch((error) => { throw error; });
   }
 
   private static generateCodeVerifier(): string {

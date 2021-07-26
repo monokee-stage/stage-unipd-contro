@@ -1,12 +1,17 @@
 import { createStore } from "vuex";
-import authProvidersModule from "@/modules/authentication/store/authProviders";
-import accountsModule from "@/modules/authentication/store/accounts";
+import { state } from "@/store/store.state";
+import actions from "@/store/actions";
+import authProvidersModule from "@/store/authProviders";
+import accountsModule from "@/store/accounts";
+import enrollmentModule from "@/modules/enrollment/store";
 
 const store: any = createStore({
-  state: {},
+  state,
+  actions,
   modules: {
     authProvidersModule,
     accountsModule,
+    enrollmentModule,
   }
 });
 

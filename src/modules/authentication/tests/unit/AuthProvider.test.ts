@@ -1,4 +1,4 @@
-import { AuthProvider } from '@/modules/authentication/models/AuthProvider';
+import { AuthProvider } from '@/store/models/AuthProvider';
 
 describe('AuthProvider', () => {
   describe('getAuthProvider', () => {

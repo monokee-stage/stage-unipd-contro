@@ -7,23 +7,45 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Blank</ion-title>
-        </ion-toolbar>
-      </ion-header>
-    
+<!--      <ion-header collapse="condense">-->
+<!--        <ion-toolbar>-->
+<!--          <ion-title size="large">MFA App</ion-title>-->
+<!--        </ion-toolbar>-->
+<!--      </ion-header>-->
+
+<!--      <ion-list>-->
+<!--        <ion-list-header>Accounts</ion-list-header>-->
+<!--        <ion-item v-for="account in accounts">-->
+<!--          <ion-label>-->
+<!--            <h2>{{ account.id }}</h2>-->
+<!--          </ion-label>-->
+<!--        </ion-item>-->
+<!--      </ion-list>-->
       <div id="container">
+        <ion-button @click="$router.push('/enrollment')">Enroll device</ion-button>
+        <ion-button @click="$router.push('/authorize/1234567890/1234/1234')">Authorize</ion-button>
         <a @click="$router.push('/authentication/test-domainId')">Authentication</a>
         <a @click="$router.push('/authentication/test-domainId2')">Authentication</a>
+        <a @click="$router.push('/authentication/test-domainId3')">Authentication</a>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
+import {
+  IonButton,
+  IonContent,
+  IonHeader,
+  // IonList,
+  // IonListHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar
+} from '@ionic/vue';
 import { defineComponent } from 'vue';
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import { Account } from "@/store/models/Account";
 
 export default defineComponent({
   name: 'Home',
@@ -32,7 +54,18 @@ export default defineComponent({
     IonHeader,
     IonPage,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    IonButton,
+    // IonList,
+    // IonListHeader,
+  },
+  computed: {
+    accounts: function (): Account[] {
+      return this.$store.accountsModule.accounts;
+    }
+  },
+  mounted: function () {
+    SecureStoragePlugin.clear();
   }
 });
 </script>

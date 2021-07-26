@@ -1,5 +1,5 @@
-import { AuthProvidersState } from "@/modules/authentication/store/authProviders/state";
-import { AuthProvider } from "@/modules/authentication/models/AuthProvider";
+import { AuthProvidersState } from "@/store/authProviders/state";
+import { AuthProvider } from "@/store/models/AuthProvider";
 
 export default {
   getAuthProviderFromDomainId: (state: AuthProvidersState) => (domainId: string): AuthProvider | undefined => {

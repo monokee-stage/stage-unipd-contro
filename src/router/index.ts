@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import Home from '../views/Home.vue'
-import authenticationRoutes from '@/modules/authentication/router';
+import authenticationRoutes from '@/modules/authentication/routes';
+import enrollmentRoutes from '@/modules/enrollment/routes';
+import authorizationRoutes from '@/modules/authorization/routes';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -13,7 +15,9 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Home',
     component: Home
   },
-  authenticationRoutes,
+  ...authenticationRoutes,
+  ...enrollmentRoutes,
+  ...authorizationRoutes,
   {
     path: '/redirect',
     name: 'Redirect',

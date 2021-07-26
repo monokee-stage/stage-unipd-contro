@@ -1,11 +1,12 @@
 import {
   AuthorizationResponse,
   AuthorizationServiceConfiguration, AuthorizationServiceConfigurationJson,
-  GRANT_TYPE_AUTHORIZATION_CODE,
-  TokenRequest
+  GRANT_TYPE_AUTHORIZATION_CODE, StringMap,
+  // TokenRequest
 } from "@openid/appauth";
-import AuthService from "@/modules/authentication/services/AuthService";
+import AuthService from "@/services/AuthService";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import { BackEndApiService } from "@/services/BackEndApiService";
 
 export interface AuthProviderJson {
   domainId: string;
@@ -26,15 +27,20 @@ export class AuthProvider {
 
   public static getAuthProvider(domainId: string): Promise<AuthProvider> {
     return SecureStoragePlugin.get({key: domainId})
-      .then((stringifiedProvider) => {
+      .then((stringifiedAuthProvider) => {
         console.log('From storage');
-        return AuthProvider.fromSecureStorage(stringifiedProvider.value)
+        const {domainId, clientId, metadataURL, configuration}: AuthProviderJson = JSON.parse(stringifiedAuthProvider.value);
+        // return AuthProvider.fromSecureStorage(stringifiedProvider.value)
+        return new AuthProvider(domainId).setClientId(clientId).setMetadataUrl(metadataURL).setConfiguration(configuration);
       })
       .catch(error => {
-        console.log('Recreated')
-        // No provider was saved with the given domainId, create a new one
-        return new AuthProvider(domainId).init();
+        console.log('No provider was saved with the given domainId, please create a new one');
+        throw error;
       });
+  }
+
+  public static newAuthProviderFromDomainId(domainId: string): Promise<AuthProvider> {
+    return new AuthProvider(domainId).init();
   }
 
   private static fromSecureStorage(stringifiedAuthProvider: string): AuthProvider {
@@ -48,29 +54,22 @@ export class AuthProvider {
   }
 
 
-  private constructor(domainId: string, clientId?: string, metadataURL?: string, configuration?: string) {
+  private constructor(domainId: string) {
       this._domainId = domainId;
       return this;
   }
 
-  private init(): AuthProvider {
-    // this._metadataURL = AuthService.getAuthProviderConfigurationURL(this._domainId);
-    // Fetch metadataURL from be
-    // BackEndApiService.getAuthProviderMetadataURL(this.domainId)
-    //   .then(response => this._metadataURL = response.data)
-    //   .catch(error => { throw error;});
-    this._metadataURL = 'https://new.monokee.com/oauth2/.well-known/oauth-authorization-server/de037da2-054e-496e-b701-791cf65f0947?domain_id=8214e0ab-5f42-410a-b393-8966a1066d06';
-    // Fetch client_id from be
-    // BackEndApiService.getApplicationClientId(this.domainId)
-    //   .then(response => this._clientId = response.data)
-    //   .catch(error => { throw error;});
-    this._clientId = 'R^zd$vZ8KRf5MDbR';
-    AuthService.getAuthProviderConfiguration(this.metadataURL)
-      .then(response => {
-        this._configuration = response;
-        this.save();
-      })
-      .catch(error => { throw error});
+  private async init(): Promise<AuthProvider> {
+    // Fetch metadataURL and client_id from backend
+    const metadataResponse = await BackEndApiService.getAuthProviderMetadata(this.domainId);
+    // console.log(metadataResponse);
+    this._metadataURL = metadataResponse.metadataUrl;
+    this._clientId = metadataResponse.client_id;
+    // Fetch provider configuration from metadataURL
+    this._configuration = await AuthService.getAuthProviderConfiguration(this.metadataURL);
+    // console.log(this.configuration);
+    // Save the newly created provider in secure storage
+    this.save()
 
     return this;
   }
@@ -128,18 +127,17 @@ export class AuthProvider {
 
   authorizationRequestURL(): string {
     this._state = AuthProvider.generateState();
-    return encodeURI(this.configuration.authorizationEndpoint +
+
+    return this.configuration.authorizationEndpoint +
       (this.configuration.authorizationEndpoint.indexOf('?') !== -1 ? '&' : '?')+
-      `response_type=code
-      &client_id=${this.clientId}
-      &redirect_uri=${AuthProvider.redirectURI}
-      &state=${this._state}
-      &scope=admin`
-      // +
-      // '&code_challenge=2413fb3709b05939f04cf2e92f7d0897fc2596f9ad0b8a9ea855c7bfebaae892'+
-      // +challenge+
+      `response_type=code`+
+      `&client_id=${encodeURIComponent(this.clientId)}`+
+      `&state=${this._state}`+
+      `&scope=admin`+
+      `&code_challenge=h3-rO_IJQ3Vr8C5UzVQ6L-ZTK95KUI5F-cNcFxUlHRg`+
+      `&code_challenge_method=S256`;
+      // + '&code_challenge=2413fb3709b05939f04cf2e92f7d0897fc2596f9ad0b8a9ea855c7bfebaae892'+
       // '&code_challenge_method=S256'
-    );
   }
 
   toString(): string {
@@ -161,13 +159,27 @@ export class AuthProvider {
   }
 
   requestToken(authResponse: AuthorizationResponse) {
-    const tokenRequest = new TokenRequest({
-      client_id: this.clientId,
-      redirect_uri: AuthProvider.redirectURI,
-      grant_type: GRANT_TYPE_AUTHORIZATION_CODE,
-      code: authResponse.code,
-      refresh_token: undefined,
-    });
-    AuthService.requestToken(this.configuration, tokenRequest);
+    // const extras: StringMap = {};
+    // const tokenRequest = new TokenRequest({
+    const tokenRequest = {
+      // client_id: this.clientId,
+      // code_verifier: '8gwIpn~xQ_-v26on3MTlPNkdS3YgRNmYk9EMaE7Tq60GgrhRFZ.bGrz5yTC7oKkGYEQk2F11FqlukXI01~D0sH-SH3R-D2cofcknlnERVBIt0zv8rkbNOlp935FQkq1X',
+      // redirect_uri: AuthProvider.redirectURI,
+      grant_type: 'authorization_code',
+      // code: authResponse.code,
+      // refresh_token: undefined,
+    };
+    AuthService.requestToken(this.configuration, tokenRequest)
+      // .then(r => console.log(r.toJson()))
+      // .catch(error => console.log(error));
   }
+}
+
+export interface TokenRequest {
+  client_id?: string;
+  code_verifier?: string;
+  redirect_uri?: string;
+  grant_type?: string;
+  code?: string;
+  // refresh_token
 }
