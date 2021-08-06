@@ -10,13 +10,14 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
-<!--      <ion-button @click="$router.replace('/home')">Cancel enrollment</ion-button>-->
       <h3>Insert the desired provider's domain id</h3>
       <ion-item>
         <ion-input type="text" placeholder="Domain id" v-model="domainId"></ion-input>
       </ion-item>
-      <ion-button @click="confirmDomainId">Confirm domain id</ion-button>
-      <ion-button @click="insertFromQRCode">Scan QR Code</ion-button>
+      <div class="content-buttons">
+        <ion-button @click="confirmDomainId">Confirm</ion-button>
+        <ion-button @click="insertFromQRCode">Scan QR Code</ion-button>
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -36,10 +37,11 @@ import {
   IonInput,
   alertController
 } from "@ionic/vue";
-import { AuthProvider } from "@/store/models/AuthProvider";
-import { enrollmentAuthProviders } from "@/modules/enrollment/models/AuthProviders";
-import { TokenResponse } from "@openid/appauth";
-import { BarcodeScanner, BarcodeScanResult } from "@ionic-native/barcode-scanner";
+import { OAuthProvider } from "@/store/models/OAuthProvider";
+import {
+  BarcodeScanner,
+  BarcodeScanResult
+} from "@ionic-native/barcode-scanner";
 
 export default defineComponent({
   name: "Enrollment",
@@ -65,34 +67,19 @@ export default defineComponent({
       if (this.domainId.length < 1) {
         this.displayInvalidDomainIdAlert();
       } else {
-        // Check if authProvider is already in memory
+        // Check if OAuthProvider is already in memory
         if (this.provider === undefined) {
-          // Create/load the authProvider
-          // enrollmentAuthProviders.loadAuthProvider(this.domainId)
-          this.$store.dispatch('authProvidersModule/loadProvider', this.domainId)
-              .then(() =>{
-                this.$store.dispatch(
-                    'accountsModule/addAccount',{
-                    provider: this.$store.getters['authProvidersModule/getAuthProviderFromDomainId'](this.domainId),
-                    token: new TokenResponse({
-                      access_token: 'token',
-                      id_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-                    })}).then(() => {
-                      console.log('Added account')
-                      this.$router.replace(`/enrollment/account/1234567890/device`)
-                    })
-                  // this.$store
-                  // this.$router.replace(`/authentication/device/${this.domainId}`)
-
-              })
+          // Create/load the OAuthProvider
+          console.log('Loading provider')
+          this.$store.dispatch('OAuthProvidersModule/loadOAuthProvider', this.domainId)
+              .then(() => this.$router.replace(`/authentication/domainId/${this.domainId}/accountId/new`))
               .catch((error: Error) => {
                 console.log('Enrollment error')
                 this.displayErrorAlert(error.message);
               });
         } else {
           // The requested provider is already in memory, proceed with account authentication
-          // this.$router.replace(`/authentication/device/${this.domainId}`);
-          this.$router.replace(`/enrollment/account/1234567890/device`)
+          this.$router.replace(`/authentication/domainId/${this.domainId}/accountId/new`)
         }
       }
     },
@@ -124,9 +111,8 @@ export default defineComponent({
     },
   },
   computed: {
-    provider: function (): AuthProvider | undefined {
-      // return enrollmentAuthProviders.getLoadedAuthProviderFromDomainId(this.domainId);
-      return this.$store.getters['authProvidersModule/getAuthProviderFromDomainId'](this.domainId)
+    provider: function (): OAuthProvider | undefined {
+      return this.$store.getters['OAuthProvidersModule/getOAuthProviderFromDomainId'](this.domainId)
     }
   }
 });
@@ -135,5 +121,9 @@ export default defineComponent({
 <style scoped>
  h3 {
    font-size: 16px;
+ }
+
+ .content-buttons {
+   align-content: center;
  }
 </style>

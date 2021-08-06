@@ -24,11 +24,21 @@ import '@ionic/vue/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
-const app = createApp(App)
-  .use(IonicVue)
-  .use(router)
-  .use(store);
+// const result = dotenv.config({path: resolve(__dirname), debug: true})
+//
+// // Check if error occurred loading .env variables
+// if (result.error) {
+//   throw result.error
+// } else {
+//
+//   console.log('Environment: ' + process.env)
+//   console.log('Parsed: ' + result.parsed)
+  const app = createApp(App)
+    .use(IonicVue)
+    .use(router)
+    .use(store);
 
-router.isReady().then(() => {
-  app.mount('#app');
-});
+  router.isReady().then(() => {
+    app.mount('#app');
+  });
+// }

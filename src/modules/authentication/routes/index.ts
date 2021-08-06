@@ -2,8 +2,9 @@ import { RouteRecordRaw } from "vue-router";
 
 export default [
   {
-  path: '/authentication/device/:domainId',
-  name: 'Authentication',
-  component: () => import('@/modules/authentication/views/Authentication.vue')
+    path: '/authentication/domainId/:domainId/accountId/:accountId',
+    name: 'Authentication',
+    component: () => import('@/modules/authentication/views/Authentication.vue'),
+    props: true
   },
 ] as RouteRecordRaw[];

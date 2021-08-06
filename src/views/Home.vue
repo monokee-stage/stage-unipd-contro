@@ -1,72 +1,109 @@
 <template>
   <ion-page>
+    <ion-menu side="start" menu-id="features" content-id="content">
+      <ion-header :translucent="true">
+        <ion-toolbar>
+          <ion-buttons>
+            <ion-menu-button slot="start"></ion-menu-button>
+            <ion-title size="medium">Menu</ion-title>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content id="menu-content">
+        <ion-list>
+          <ion-item button @click="toEnrollment">
+            <ion-label>Enroll device</ion-label>
+          </ion-item>
+          <ion-item button @click="toRemoval">
+            <ion-label>Remove device</ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
+
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>MFA App</ion-title>
+        <ion-buttons>
+          <ion-menu-button slot="start" menu="features"></ion-menu-button>
+          <ion-title size="medium">MFA App</ion-title>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    
-    <ion-content :fullscreen="true">
+
+    <ion-content :fullscreen="true" id="content">
 <!--      <ion-header collapse="condense">-->
 <!--        <ion-toolbar>-->
-<!--          <ion-title size="large">MFA App</ion-title>-->
+<!--          <ion-buttons>-->
+<!--            <ion-menu-button slot="start" menu="features"></ion-menu-button>-->
+<!--          </ion-buttons>-->
+<!--          <ion-title>MFA App</ion-title>-->
 <!--        </ion-toolbar>-->
 <!--      </ion-header>-->
-
+      <AccountsList></AccountsList>
 <!--      <ion-list>-->
-<!--        <ion-list-header>Accounts</ion-list-header>-->
-<!--        <ion-item v-for="account in accounts">-->
+<!--        <ion-list-header>Linked accounts</ion-list-header>-->
+<!--        <ion-item v-for="account in accounts" v-bind:key="account.id">-->
 <!--          <ion-label>-->
-<!--            <h2>{{ account.id }}</h2>-->
+<!--            <h3>User: {{ account.username }}</h3>-->
+<!--            <h4>Host: {{ account.provider.name }}</h4>-->
 <!--          </ion-label>-->
 <!--        </ion-item>-->
 <!--      </ion-list>-->
-      <div id="container">
-        <ion-button @click="$router.push('/enrollment')">Enroll device</ion-button>
-        <ion-button @click="$router.push('/authorize/1234567890/1234/1234')">Authorize</ion-button>
-        <a @click="$router.push('/authentication/test-domainId')">Authentication</a>
-        <a @click="$router.push('/authentication/test-domainId2')">Authentication</a>
-        <a @click="$router.push('/authentication/test-domainId3')">Authentication</a>
-      </div>
     </ion-content>
+
   </ion-page>
 </template>
 
 <script lang="ts">
 import {
-  IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
-  // IonList,
-  // IonListHeader,
+  IonItem,
+  IonList,
+  IonMenu,
+  IonLabel,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  IonMenuButton,
+  menuController,
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { Account } from "@/store/models/Account";
+import AccountsList from "@/views/AccountsList.vue";
 
 export default defineComponent({
   name: 'Home',
   components: {
+    AccountsList,
     IonContent,
     IonHeader,
     IonPage,
     IonTitle,
     IonToolbar,
-    IonButton,
-    // IonList,
-    // IonListHeader,
+    IonButtons,
+    IonList,
+    IonLabel,
+    IonItem,
+    IonMenu,
+    IonMenuButton,
+  },
+  methods: {
+    toEnrollment: function () {
+      menuController.close('features')
+      this.$router.push('/enrollment')
+    },
+    toRemoval: function () {
+      menuController.close('features')
+      this.$router.push('/removal')
+    }
   },
   computed: {
     accounts: function (): Account[] {
-      return this.$store.accountsModule.accounts;
+      return this.$store.state.accountsModule.accounts;
     }
   },
-  mounted: function () {
-    SecureStoragePlugin.clear();
-  }
 });
 </script>
 

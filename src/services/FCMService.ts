@@ -6,22 +6,25 @@ import {
   Token,
 } from "@capacitor/push-notifications";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import router from "@/router";
-
-const FIREBASE_TOKEN_KEY = 'FIREBASE_TOKEN_KEY';
+import { loadEnvironmentVariable } from "@/util";
 
 class FCMService {
 
-  initPush() {
+  private _FIREBASE_TOKEN_KEY = 'FIREBASE_TOKEN_KEY'
+
+  initPushNotifications(pushNotificationCallback: (notification: PushNotificationSchema) => void,
+                        actionOnPushNotificationCallback: (notification: PushNotificationSchema) => void) {
     if (isPlatform('mobile')) {
-      this.registerPush();
+      this.registerPushNotification()
+      this.bindToNotificationEvent(pushNotificationCallback, actionOnPushNotificationCallback)
     }
   }
 
-  private registerPush() {
+  private registerPushNotification() {
     PushNotifications.requestPermissions()
       .then((permission) => {
         if (permission.receive === 'granted') {
+          // Permission granted
           console.log('Permission granted')
           PushNotifications.register()
             .then(() => console.log('Registered'))
@@ -35,10 +38,13 @@ class FCMService {
     PushNotifications.addListener(
       'registration',
       (token: Token) => {
-        console.log('Save this token: ',token.value)
-        SecureStoragePlugin.set({key: FIREBASE_TOKEN_KEY, value: token.value})
-          .then(() => console.log('Successfully registered'))
-          .catch(() => console.log('Error saving'))
+        // Upon registration the firebase's token is saved
+        SecureStoragePlugin.remove({ key: this._FIREBASE_TOKEN_KEY })
+          .catch(() => console.log('Never registered'))
+          .then(() =>
+            SecureStoragePlugin.set({key: this._FIREBASE_TOKEN_KEY, value: token.value})
+              .then(() => console.log('Successfully registered to notifications'))
+              .catch(() => console.log('Error saving')))
       }
     )
 
@@ -48,31 +54,32 @@ class FCMService {
         console.log('Error: ',error)
       }
     )
+  }
+
+  private bindToNotificationEvent(pushNotificationCallback: (notification: PushNotificationSchema) => void,
+                                  actionOnPushNotificationCallback: (notification: PushNotificationSchema) => void) {
 
     PushNotifications.addListener(
       'pushNotificationReceived',
-      async (notification: PushNotificationSchema) => {
-        console.log('Push received: ' + JSON.stringify(notification));
-      }
+      async (notification: PushNotificationSchema) => await pushNotificationCallback(notification)
     )
 
     PushNotifications.addListener(
       'pushNotificationActionPerformed',
-      async (notification: ActionPerformed) => {
-        const data = notification.notification.data
-        console.log('Action performed: ' + JSON.stringify(notification.notification))
-        // if (data.challenge && data.session_id) {
-        const accountId = '1234567890'
-        await router.push(`/authorize/${accountId}/${data.session_id}/${data.challenge}`)
-        // }
-      }
+      async (actionPerformed: ActionPerformed) => await actionOnPushNotificationCallback(actionPerformed.notification)
     )
+
   }
 
   getToken(): Promise<string> {
-    return SecureStoragePlugin.get({ key: FIREBASE_TOKEN_KEY})
-      .then(token => token.value)
-      .catch(error => { throw error })
+    return SecureStoragePlugin.get({ key: this._FIREBASE_TOKEN_KEY })
+      .then(token => {
+        console.log('Firebase token found')
+        return token.value
+      })
+      .catch(error => {
+        console.log('Firebase token not found')
+        throw error })
   }
 }
 

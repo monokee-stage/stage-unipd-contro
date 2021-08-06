@@ -28,8 +28,6 @@
     IonItem,
     IonInput,
   } from "@ionic/vue";
-  import { AuthProvider } from "@/store/models/AuthProvider";
-  import { enrollmentAuthProviders } from "@/modules/enrollment/models/AuthProviders";
   import { Account } from "@/store/models/Account";
 
 export default defineComponent({

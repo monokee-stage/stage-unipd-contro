@@ -4,6 +4,7 @@ import Home from '../views/Home.vue'
 import authenticationRoutes from '@/modules/authentication/routes';
 import enrollmentRoutes from '@/modules/enrollment/routes';
 import authorizationRoutes from '@/modules/authorization/routes';
+import removalRoutes from '@/modules/removal/routes';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -15,14 +16,15 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Home',
     component: Home
   },
-  ...authenticationRoutes,
-  ...enrollmentRoutes,
-  ...authorizationRoutes,
   {
     path: '/redirect',
     name: 'Redirect',
     component: () => import('../modules/authentication/views/Authentication.vue')
-  }
+  },
+  ...authenticationRoutes,
+  ...enrollmentRoutes,
+  ...authorizationRoutes,
+  ...removalRoutes,
 ]
 
 const router = createRouter({

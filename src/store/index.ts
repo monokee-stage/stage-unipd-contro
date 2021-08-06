@@ -1,21 +1,20 @@
 import { createStore } from "vuex";
-import { state } from "@/store/store.state";
+import { state } from "@/store/state";
 import actions from "@/store/actions";
-import authProvidersModule from "@/store/authProviders";
+import mutations from "@/store/mutations";
+import OAuthProvidersModule from "@/store/oauthProviders";
 import accountsModule from "@/store/accounts";
-import enrollmentModule from "@/modules/enrollment/store";
 
 const store: any = createStore({
   state,
   actions,
+  mutations,
   modules: {
-    authProvidersModule,
+    OAuthProvidersModule,
     accountsModule,
-    enrollmentModule,
   }
 });
 
 export default store;
 
 export type AppStore = typeof store;
-export type AppState = typeof store.state;

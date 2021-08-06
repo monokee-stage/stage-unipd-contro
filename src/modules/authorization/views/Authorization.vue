@@ -2,16 +2,18 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>Authorize app</ion-title>
+        <ion-title>Authorize operation</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
       <div id="container">
-        <h1>{{ }}</h1>
+        <h1>{{ $route.query.title }}</h1>
+        <h2>{{ $route.query.message }}</h2>
+        <h3>Location: {{ location }}</h3>
+        <h3>Time: {{ info.time }}</h3>
         <ion-button @click="authorize">Authorize</ion-button>
         <ion-button @click="refuse">Refuse</ion-button>
-        <a @click="$router.push('/home')">Authentication</a>
       </div>
     </ion-content>
   </ion-page>
@@ -20,6 +22,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { NativeBiometric } from "capacitor-native-biometric";
+import { NativeGeocoder } from "@ionic-native/native-geocoder";
 import {
   IonButton,
   IonContent,
@@ -28,7 +31,6 @@ import {
   IonTitle,
   IonToolbar
 } from "@ionic/vue";
-import { authorization } from "@/modules/authorization/models";
 import { Account } from "@/store/models/Account";
 
 export default defineComponent({
@@ -41,30 +43,53 @@ export default defineComponent({
     IonContent,
     IonButton
   },
+  data() {
+    return {
+      location: '',
+      info: {
+        time: '',
+        latitude: 0,
+        longitude: 0,
+      }
+    }
+  },
   methods: {
     authorize: function () {
       console.log('Authorize')
       NativeBiometric.isAvailable()
           .then((result) => {
             if (result.isAvailable) {
-              NativeBiometric.verifyIdentity({
+              return NativeBiometric.verifyIdentity({
                 reason: 'Authorize operation',
                 title: 'Authorize operation'
               })
-                  .then(() => {
-                    console.log('Authorized, stuff')
-                    this.account.authorize(this.challenge, this.sessionId)
-                  })
-                  .catch((error) => console.log('Error authorizing ' + error))
             } else {
-              console.log('Not available')
+              throw new Error('Biometric not available')
             }
           })
-          .catch((error) => console.log('Biometric not available' + error))
+          .then(() => {
+            console.log('Authorized, stuff')
+            // if (!this.account.isAuthenticated()) {
+            //   return this.account.refreshToken()
+            //   .catch(() => this.$router.push(`/authentication/domainId/${this.account.provider.domainId}/accountId/${this.account.id}`))
+            //   .then(() => this.account.authorize(this.challenge, this.sessionId))
+            // } else
+            return this.account.authorize(this.challenge, this.sessionId)
+          })
+          .then(() => {
+            console.log('Redirect')
+            return this.$router.back()
+          })
+          .catch((error) => console.log('Error authorizing:',error))
     },
     refuse: function () {
       console.log('Refuse')
       this.account.refuse(this.challenge, this.sessionId)
+      .then(() => this.$router.replace('/home'))
+    },
+    calculateLocation: function (): Promise<string> {
+      return NativeGeocoder.reverseGeocode(this.info.latitude, this.info.longitude)
+          .then((result) => result[0].locality)
     }
   },
   computed: {
@@ -82,20 +107,40 @@ export default defineComponent({
     sessionId: function (): string {
       const { sessionId } = this.$route.params
       return sessionId.toString()
-    }
+    },
   },
   mounted() {
-    if (!this.account) {
-        this.$store.dispatch('accountsModule/loadAccount', this.accountId)
-          .catch(() => {
-            console.log('Inexistent account')
-            // this.$router.replace('/home')
-          })
-    }
+    console.log(this.$route)
+    this.info = JSON.parse(this.$route.query.info as string);
+    this.calculateLocation()
+      .then((location) => this.location = location)
+      .then(() => {
+        if (!this.account) {
+          this.$store.dispatch('loadAccount', this.accountId)
+            .catch(() => {
+              console.log('Inexistent account')
+              this.$router.replace('/home')
+            })
+        }
+      })
   }
 })
 </script>
 
 <style scoped>
 
+h1 {
+  font-size: 1.2em;
+  padding-left: 20px;
+}
+
+h2 {
+  font-size: 1.1em;
+  padding-left: 20px;
+}
+
+h3 {
+  font-size: 1em;
+  padding-left: 20px;
+}
 </style>
